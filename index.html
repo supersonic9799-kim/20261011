@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>세곡중학교 오늘의 점심 급식</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Jua & Gaegu -->
+    <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Jua&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Jua', sans-serif;
+            background: linear-gradient(135deg, #fef6e4 0%, #ecfdf5 50%, #eff6ff 100%);
+            min-height: 100vh;
+        }
+        .cute-shadow {
+            box-shadow: 0 12px 30px -4px rgba(16, 185, 129, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .card-bounce {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .card-bounce:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 18px 36px -6px rgba(16, 185, 129, 0.2);
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f0fdf4;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #6ee7b7;
+            border-radius: 9999px;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-start p-4 sm:p-8">
+
+    <div class="w-full max-w-2xl bg-white/95 backdrop-blur-md rounded-3xl cute-shadow border-4 border-emerald-200 overflow-hidden mb-6">
+        
+        <!-- 브라우저 창 상단 타이틀바 데코 -->
+        <div class="bg-emerald-100/70 px-4 py-3 border-b-2 border-emerald-200 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <span class="w-3.5 h-3.5 rounded-full bg-rose-400 inline-block"></span>
+                <span class="w-3.5 h-3.5 rounded-full bg-amber-400 inline-block"></span>
+                <span class="w-3.5 h-3.5 rounded-full bg-emerald-400 inline-block"></span>
+            </div>
+            <div class="bg-white/90 px-5 py-1 rounded-full text-xs sm:text-sm font-semibold text-emerald-800 border border-emerald-300 shadow-inner">
+                🏫 세곡중학교 중식 식단표
+            </div>
+            <div class="text-emerald-600 font-bold text-sm">🥗 냠냠</div>
+        </div>
+
+        <!-- 메인 헤더 배너 -->
+        <header class="text-center py-6 px-4 bg-gradient-to-r from-emerald-100 via-teal-50 to-amber-50 border-b-2 border-emerald-200/60 relative">
+            <div class="absolute top-3 left-6 text-2xl animate-bounce hidden sm:block">🍎</div>
+            <div class="absolute top-3 right-6 text-2xl animate-bounce hidden sm:block">🥕</div>
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-emerald-800 drop-shadow-sm flex items-center justify-center gap-2">
+                <span>🍱</span> 오늘 점심 뭐 먹지? <span>😋</span>
+            </h1>
+            <p class="text-emerald-700/80 text-sm sm:text-base mt-1">세곡중학교의 건강하고 맛있는 중식 메뉴를 확인하세요!</p>
+        </header>
+
+        <!-- 컨트롤 영역 (날짜 선택 및 빠른 이동 버튼) -->
+        <div class="p-5 sm:p-6 bg-amber-50/40 border-b border-emerald-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+            
+            <!-- 날짜 선택 컨트롤러 -->
+            <div class="flex items-center gap-2 w-full sm:w-auto justify-center">
+                <button onclick="changeDate(-1)" class="bg-emerald-200 hover:bg-emerald-300 text-emerald-900 px-3.5 py-2 rounded-2xl font-bold transition shadow-sm active:scale-95 text-sm">
+                    ◀ 어제
+                </button>
+                <div class="relative flex items-center">
+                    <input 
+                        type="date" 
+                        id="mealDate" 
+                        onchange="fetchMealInfo()"
+                        class="bg-white border-2 border-emerald-300 px-4 py-2 rounded-2xl font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-emerald-200 shadow-sm cursor-pointer text-sm sm:text-base"
+                    >
+                </div>
+                <button onclick="changeDate(1)" class="bg-emerald-200 hover:bg-emerald-300 text-emerald-900 px-3.5 py-2 rounded-2xl font-bold transition shadow-sm active:scale-95 text-sm">
+                    내일 ▶
+                </button>
+            </div>
+
+            <!-- 오늘 보기 버튼 -->
+            <div class="flex items-center gap-2 w-full sm:w-auto justify-center">
+                <button onclick="setToday()" class="bg-orange-400 hover:bg-orange-500 text-white px-5 py-2 rounded-2xl font-bold shadow-sm transition active:scale-95 text-sm flex items-center justify-center gap-1 w-full sm:w-auto">
+                    ✨ 오늘 보기
+                </button>
+            </div>
+        </div>
+
+        <!-- 로딩 표시 -->
+        <div id="loading" class="hidden text-center py-16">
+            <div class="inline-block animate-spin text-4xl mb-3">🍳</div>
+            <p class="text-emerald-700 font-bold text-lg">맛있는 점심 식단을 요리 중이에요...</p>
+        </div>
+
+        <!-- 중식 카드 출력 영역 -->
+        <div class="p-6 sm:p-8">
+            <div id="resultContainer" class="w-full">
+                <!-- 동적으로 채워질 중식 카드 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 푸터 -->
+    <footer class="text-emerald-900/60 text-xs sm:text-sm font-bold tracking-wider mb-4">
+        Segok Middle School Lunch Menu App • Powered by NEIS API 🥗
+    </footer>
+
+    <script>
+        // 페이지 로드 시 오늘 날짜 설정 및 급식 조회
+        window.addEventListener('DOMContentLoaded', () => {
+            setToday();
+        });
+
+        // 오늘 날짜 세팅 후 조회
+        function setToday() {
+            const today = new Date();
+            setDateValue(today);
+            fetchMealInfo();
+        }
+
+        // 특정 일수만큼 날짜 이동
+        function changeDate(days) {
+            const dateInput = document.getElementById('mealDate');
+            let currentDate = dateInput.value ? new Date(dateInput.value) : new Date();
+            currentDate.setDate(currentDate.getDate() + days);
+            setDateValue(currentDate);
+            fetchMealInfo();
+        }
+
+        // input[type="date"]에 날짜 반영
+        function setDateValue(dateObj) {
+            const yyyy = dateObj.getFullYear();
+            const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const dd = String(dateObj.getDate()).padStart(2, '0');
+            document.getElementById('mealDate').value = `${yyyy}-${mm}-${dd}`;
+        }
+
+        // NEIS API 호출 및 XML 파싱 함수 (중식만 필터링)
+        async function fetchMealInfo() {
+            const dateInput = document.getElementById('mealDate').value;
+            if (!dateInput) return;
+
+            const formattedDate = dateInput.replace(/-/g, '');
+            // 세곡중학교 NEIS API URL (교육청코드: B10, 학교코드: 7091461)
+            const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?ATPT_OFCDC_SC_CODE=B10&SD_SCHUL_CODE=7091461&MLSV_YMD=${formattedDate}&Type=xml`;
+
+            const loadingEl = document.getElementById('loading');
+            const resultContainer = document.getElementById('resultContainer');
+
+            loadingEl.classList.remove('hidden');
+            resultContainer.innerHTML = '';
+
+            try {
+                const response = await fetch(url);
+                const xmlText = await response.text();
+
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+
+                // API 결과 코드 검증
+                const resultCodeNode = xmlDoc.querySelector('RESULT > CODE');
+                if (resultCodeNode && resultCodeNode.textContent !== 'INFO-000') {
+                    renderEmptyState("선택하신 날짜에 등록된 점심 급식 정보가 없어요! 🥲<br><span class='text-xs font-normal text-slate-400'>주말이나 공휴일일 수 있습니다.</span>");
+                    return;
+                }
+
+                const rows = xmlDoc.querySelectorAll('row');
+                if (rows.length === 0) {
+                    renderEmptyState("선택하신 날짜에 등록된 점심 급식 정보가 없어요! 🥲");
+                    return;
+                }
+
+                let lunchData = null;
+                
+                rows.forEach(row => {
+                    const mealType = row.querySelector('MMEAL_SC_NM')?.textContent || '';
+                    // '중식'인 데이터만 추출
+                    if (mealType === '중식') {
+                        let dishInfo = row.querySelector('DDISH_NM')?.textContent || '';
+                        const calInfo = row.querySelector('CAL_INFO')?.textContent || '';
+                        
+                        // 알레르기 번호 제거 (예: . 1.2.5. 등 제거)
+                        dishInfo = dishInfo.replace(/\d+\./g, '');
+                        // <br/> 태그를 일반 줄바꿈으로 변경
+                        dishInfo = dishInfo.replace(/<br\/?>/gi, '<br>');
+
+                        lunchData = { dishInfo, calInfo };
+                    }
+                });
+
+                if (!lunchData) {
+                    renderEmptyState("이날은 중식 급식 운영이 없는 날이에요! 🍃");
+                    return;
+                }
+
+                // 싱그러운 연두색/주황색 조합의 귀여운 점심 카드 렌더링
+                resultContainer.innerHTML = `
+                    <div class="bg-gradient-to-br from-emerald-50 via-teal-50 to-orange-50 border-4 border-emerald-300 rounded-3xl p-6 sm:p-8 card-bounce cute-shadow flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-6 pb-4 border-b-2 border-emerald-200/70">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-12 h-12 bg-emerald-200 rounded-2xl flex items-center justify-center text-2xl shadow-sm">
+                                        🍱
+                                    </div>
+                                    <div>
+                                        <h3 class="text-2xl font-extrabold text-emerald-900">오늘의 점심 메뉴</h3>
+                                        <p class="text-xs text-emerald-700 font-semibold mt-0.5">Yummy Lunch Time</p>
+                                    </div>
+                                </div>
+                                <span class="text-xs sm:text-sm font-extrabold px-4 py-1.5 bg-orange-100 text-orange-800 rounded-full shadow-sm border border-orange-200">
+                                    🔥 ${lunchData.calInfo}
+                                </span>
+                            </div>
+                            <div class="text-slate-700 text-lg sm:text-xl leading-relaxed space-y-2 mb-8 bg-white/80 p-6 rounded-2xl border-2 border-emerald-100 shadow-inner text-center sm:text-left">
+                                ${lunchData.dishInfo}
+                            </div>
+                        </div>
+                        <button onclick="likeLunch()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold py-3.5 px-6 rounded-2xl shadow-md transition active:scale-95 text-center text-base flex items-center justify-center gap-2">
+                            <span>❤️</span> 오늘 점심 완전 기대돼요! <span>✨</span>
+                        </button>
+                    </div>
+                `;
+
+            } catch (error) {
+                console.error('API Error:', error);
+                renderEmptyState("데이터를 불러오는 중 문제가 발생했어요! 😥<br><span class='text-xs font-normal text-slate-400'>인터넷 연결을 확인해주세요.</span>");
+            } finally {
+                loadingEl.classList.add('hidden');
+            }
+        }
+
+        // 결과 없음 상태 렌더링 헬퍼
+        function renderEmptyState(message) {
+            const resultContainer = document.getElementById('resultContainer');
+            resultContainer.innerHTML = `
+                <div class="bg-amber-50/65 border-3 border-dashed border-amber-300 rounded-3xl p-12 text-center">
+                    <div class="text-4xl mb-3">🥗</div>
+                    <p class="text-amber-800 font-bold text-lg">${message}</p>
+                </div>
+            `;
+        }
+
+        // 찜하기 버튼 클릭 시 토스트 메시지
+        function likeLunch() {
+            const dateStr = document.getElementById('mealDate').value;
+            const box = document.createElement('div');
+            box.className = 'fixed bottom-6 right-6 bg-emerald-600 text-white font-bold px-6 py-3.5 rounded-2xl shadow-2xl z-50 animate-bounce border-2 border-emerald-400';
+            box.innerText = `✨ ${dateStr} 점심 메뉴가 마음에 든 식단으로 찜되었습니다! 😋`;
+            document.body.appendChild(box);
+            setTimeout(() => {
+                box.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
